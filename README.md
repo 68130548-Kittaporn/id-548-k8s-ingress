@@ -44,8 +44,8 @@
 │   ├── 30-app-api.yaml         # Deployment + Service app-api
 │   └── 40-ingress.yaml         # www-ingress (path routing) + admin-ingress (rewrite → /edit)
 ├── apps/
-│   ├── app-about/   app.py, photo.svg   (เปลี่ยนเป็นรูปจริงของตนเอง)
-│   ├── app-research/ app.py, summary.json (สรุปงานวิจัยเริ่มต้น)
+│   ├── app-about/   app.py, photo.svg   
+│   ├── app-research/ app.py, summary.json 
 │   └── app-api/     app.py
 ├── hosts/hosts.example         # ตัวอย่าง /etc/hosts
 ├── scripts/

@@ -115,8 +115,8 @@ kubectl get ingressclass
 ### 4. Deploy แอป
 
 ```bash
-git clone https://github.com/<github-user>/<repo>.git
-cd <repo>
+git clone https://github.com/68130548-Kittaporn/id-548-k8s-ingress.git
+cd id-548-k8s-ingress
 kubectl kustomize .        # ดู manifest ที่จะถูกสร้างก่อน
 kubectl apply -k .
 kubectl -n id-548 rollout status deployment/app-about
@@ -138,10 +138,10 @@ kubectl -n ingress-nginx get pod -o wide
 แล้วเอา IP ของ node นั้นไปใส่ใน `/etc/hosts` (ถ้าเปิดเว็บจาก Windows แก้ที่ `C:\Windows\System32\drivers\etc\hosts` ต้องเปิด Notepad แบบ Administrator)
 
 ```
-192.168.1.11    www.id-548.com admin.id-548.com
+192.168.88.130  www.id-548.com admin.id-548.com
 ```
 
-IP ข้างบนเป็นตัวอย่าง ต้องเปลี่ยนตาม IP ของ node จริง ไฟล์เต็มดูได้ที่ `hosts/hosts.example`
+ตอน deploy controller ไปรันที่ k8s-worker2 เลยใช้ IP 192.168.88.130 (ถ้า deploy ใหม่แล้ว controller ย้ายไป worker1 ต้องเปลี่ยนเป็น .129) ไฟล์เต็มดูได้ที่ `hosts/hosts.example`
 
 ### 6. ตรวจสอบการทำงาน
 

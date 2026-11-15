@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: id-548
+  labels:
+    app.kubernetes.io/part-of: id-548
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: student-info
+  namespace: id-548
+data:
+  STUDENT_ID: "68130548"
+  STUDENT_NAME: "กฤตพร สาระยิ่ง"
+  STUDENT_NAME_EN: "Kittaporn Saraying"
+  COURSE: "CT665 Kubernetes and Serverless"
+  DOMAIN: "www.id-548.com"
+  # Menu links between pages (add :30080 if you use INGRESS_MODE=nodeport)
+  WWW_URL: "http://www.id-548.com"
+  ADMIN_URL: "http://admin.id-548.com"

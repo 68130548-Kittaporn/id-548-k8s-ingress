@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - k8s/00-namespace.yaml
+  - k8s/10-app-about.yaml
+  - k8s/20-app-research.yaml
+  - k8s/30-app-api.yaml
+  - k8s/40-ingress.yaml
+
+configMapGenerator:
+  - name: app-about-code
+    namespace: id-548
+    files: [apps/app-about/app.py]
+  - name: app-about-photo
+    namespace: id-548
+    files: [apps/app-about/photo.jpg]      
+  - name: app-research-code
+    namespace: id-548
+    files: [apps/app-research/app.py]
+  - name: research-seed
+    namespace: id-548
+    files: [apps/app-research/summary.json]
+  - name: app-api-code
+    namespace: id-548
+    files: [apps/app-api/app.py]
+

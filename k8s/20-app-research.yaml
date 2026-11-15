@@ -1,0 +1,110 @@
+# Storage for the research summary, so edits made on admin.id-548.com survive restarts.
+# Static hostPath PV: kubeadm clusters have no default StorageClass.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: id-548-research-pv
+  labels: { app: app-research }
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/data/id-548-research
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: research-data
+  namespace: id-548
+spec:
+  storageClassName: manual
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 100Mi
+  selector:
+    matchLabels: { app: app-research }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-research
+  namespace: id-548
+  labels: { app: app-research }
+spec:
+  replicas: 1              # single writer to the ReadWriteOnce volume
+  strategy:
+    type: Recreate         # old pod releases the volume before the new one starts
+  selector:
+    matchLabels: { app: app-research }
+  template:
+    metadata:
+      labels: { app: app-research }
+    spec:
+      initContainers:
+        # First start only: copy the seed summary onto the empty volume.
+        - name: seed-summary
+          image: busybox:1.36
+          command: ["sh", "-c", "[ -f /data/summary.json ] && echo 'summary exists, keep it' || cp /seed/summary.json /data/summary.json"]
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: seed, mountPath: /seed, readOnly: true }
+      containers:
+        - name: app-research
+          image: python:3.12-alpine
+          command: ["python", "-u", "/app/app.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DATA_FILE
+              value: /data/summary.json
+            - name: TZ
+              value: Asia/Bangkok
+          envFrom:
+            - configMapRef:
+                name: student-info      # WWW_URL / ADMIN_URL for the menu bar
+          volumeMounts:
+            - { name: code, mountPath: /app, readOnly: true }
+            - { name: data, mountPath: /data }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+      volumes:
+        - name: code
+          configMap:
+            name: app-research-code   # generated from apps/app-research/app.py
+        - name: seed
+          configMap:
+            name: research-seed       # generated from apps/app-research/summary.json
+        - name: data
+          persistentVolumeClaim:
+            claimName: research-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-research
+  namespace: id-548
+  labels: { app: app-research }
+spec:
+  type: ClusterIP
+  selector: { app: app-research }
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

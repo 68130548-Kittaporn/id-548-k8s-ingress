@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-api
+  namespace: id-548
+  labels: { app: app-api }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: app-api }
+  template:
+    metadata:
+      labels: { app: app-api }
+    spec:
+      containers:
+        - name: app-api
+          image: python:3.12-alpine
+          command: ["python", "-u", "/app/app.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+          envFrom:
+            - configMapRef:
+                name: student-info      # ADMIN_URL for the menu bar
+          volumeMounts:
+            - { name: code, mountPath: /app, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+      volumes:
+        - name: code
+          configMap:
+            name: app-api-code        # generated from apps/app-api/app.py
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-api
+  namespace: id-548
+  labels: { app: app-api }
+spec:
+  type: ClusterIP
+  selector: { app: app-api }
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

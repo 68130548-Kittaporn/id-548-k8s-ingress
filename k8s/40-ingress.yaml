@@ -1,0 +1,50 @@
+# Ingress 1: www.id-548.com, path-based routing to three services
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: www-ingress
+  namespace: id-548
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: www.id-548.com
+      http:
+        paths:
+          - path: /about
+            pathType: Prefix
+            backend:
+              service: { name: app-about, port: { number: 80 } }
+          - path: /research
+            pathType: Prefix
+            backend:
+              service: { name: app-research, port: { number: 80 } }
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: app-api, port: { number: 80 } }
+          - path: /                       # site root, app-about redirects it to /about
+            pathType: Prefix
+            backend:
+              service: { name: app-about, port: { number: 80 } }
+---
+# Ingress 2: admin.id-548.com, every request is rewritten to app-research /edit.
+# Kept separate because the rewrite annotation applies to the whole Ingress object.
+# /edit is NOT exposed on www.id-548.com, so the summary can only be edited from admin.*
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin-ingress
+  namespace: id-548
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /edit
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: admin.id-548.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: app-research, port: { number: 80 } }
